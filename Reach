@@ -12,21 +12,21 @@ b:Slider("Roto Speed",{
     max = 1; 
     precise = true;
 },function(value)
-getgenv().HowFastDanSchneiderCatchesYou = value
+getgenv().HowFastDanSchneiderCatchesYou = 0.75
 end)
 b:Slider("Sword Ranga",{
     min = 0; 
     max = 15; 
     precise = false;
 },function(value)
-getgenv().HowMuchDanSchneiderTouchesYou = value
+getgenv().HowMuchDanSchneiderTouchesYou = 0.1
 end)
 b:Slider("Attak Ranga",{
     min = 0; 
     max = 10000; 
     precise = false;
 },function(value)
-getgenv().HowMuchDanSchneiderTouchedYou = value
+getgenv().HowMuchDanSchneiderTouchedYou = 300
 end)
 getgenv().Daddy_Catches_You = false
 
