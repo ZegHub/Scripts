@@ -15,6 +15,28 @@ screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.Parent = playerGui
 
+-- Always show mouse cursor (enforced)
+UserInputService.MouseIconEnabled = true
+UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+UserInputService:GetPropertyChangedSignal("MouseIconEnabled"):Connect(function()
+    if not UserInputService.MouseIconEnabled then
+        UserInputService.MouseIconEnabled = true
+    end
+end)
+UserInputService:GetPropertyChangedSignal("MouseBehavior"):Connect(function()
+    if UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default then
+        UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+    end
+end)
+RunService.RenderStepped:Connect(function()
+    if not UserInputService.MouseIconEnabled then
+        UserInputService.MouseIconEnabled = true
+    end
+    if UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default then
+        UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+    end
+end)
+
 -- Black overlay to avoid white screen when 3D rendering is OFF
 local overlay = Instance.new("Frame")
 overlay.Name = "BlackOverlay"
@@ -95,6 +117,7 @@ local is3DRenderingEnabled = true
 local function applyState()
     -- Keep mouse cursor visible
     UserInputService.MouseIconEnabled = true
+    UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 
     -- Toggle engine 3D rendering
     RunService:Set3dRenderingEnabled(is3DRenderingEnabled)
