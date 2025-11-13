@@ -2,66 +2,137 @@ if game.Players.LocalPlayer:FindFirstChild("PlayerGui"):FindFirstChild("CustomGU
     game.Players.LocalPlayer.PlayerGui.CustomGUI:Destroy()
 end
 
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
 local screenGui = Instance.new("ScreenGui")
-local frame = Instance.new("Frame")
-local button = Instance.new("TextButton")
-local closeButton = Instance.new("TextButton")
-
 screenGui.Name = "CustomGUI"
-screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = playerGui
 
-frame.Size = UDim2.new(0, 200, 0, 100)
-frame.Position = UDim2.new(0.5, -100, 0.5, -50)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+-- Black overlay to avoid white screen when 3D rendering is OFF
+local overlay = Instance.new("Frame")
+overlay.Name = "BlackOverlay"
+overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+overlay.BorderSizePixel = 0
+overlay.Size = UDim2.new(1, 0, 1, 0)
+overlay.Position = UDim2.new(0, 0, 0, 0)
+overlay.Visible = false
+overlay.ZIndex = 0
+overlay.Parent = screenGui
+
+-- Main panel
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 260, 0, 120)
+frame.Position = UDim2.new(0.5, -130, 0.15, 0)
+frame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
 frame.BorderSizePixel = 0
+frame.ZIndex = 10
 frame.Parent = screenGui
 
-button.Size = UDim2.new(1, -20, 1, -20)
-button.Position = UDim2.new(0, 10, 0, 10)
-button.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 1
+stroke.Color = Color3.fromRGB(70, 70, 70)
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.Parent = frame
+
+-- Title
+local title = Instance.new("TextLabel")
+title.BackgroundTransparency = 1
+title.Size = UDim2.new(1, -40, 0, 28)
+title.Position = UDim2.new(0, 12, 0, 8)
+title.Font = Enum.Font.GothamSemibold
+title.TextScaled = true
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Text = "Render Control"
+title.TextColor3 = Color3.fromRGB(235, 235, 235)
+title.ZIndex = 11
+title.Parent = frame
+
+-- Close button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 24, 0, 24)
+closeButton.Position = UDim2.new(1, -30, 0, 8)
+closeButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Text = "×"
+closeButton.BorderSizePixel = 0
+closeButton.ZIndex = 11
+closeButton.Parent = frame
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(1, 0)
+closeCorner.Parent = closeButton
+
+-- Toggle button
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(1, -24, 0, 48)
+button.Position = UDim2.new(0, 12, 0, 48)
+button.BackgroundColor3 = Color3.fromRGB(34, 197, 94) -- green
 button.TextColor3 = Color3.fromRGB(255, 255, 255)
-button.Text = "Toggle 3D Rendering"
+button.Font = Enum.Font.GothamBold
+button.TextScaled = true
+button.Text = "3D: ON"
+button.BorderSizePixel = 0
+button.ZIndex = 11
 button.Parent = frame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 8)
+buttonCorner.Parent = button
 
 local is3DRenderingEnabled = true
 
+local function applyState()
+    -- Keep mouse cursor visible
+    UserInputService.MouseIconEnabled = true
+
+    -- Toggle engine 3D rendering
+    RunService:Set3dRenderingEnabled(is3DRenderingEnabled)
+
+    -- Black overlay when 3D is OFF
+    overlay.Visible = not is3DRenderingEnabled
+
+    -- Update button visuals
+    if is3DRenderingEnabled then
+        button.BackgroundColor3 = Color3.fromRGB(34, 197, 94) -- green
+        button.Text = "3D: ON"
+    else
+        button.BackgroundColor3 = Color3.fromRGB(239, 68, 68) -- red
+        button.Text = "3D: OFF"
+    end
+end
+
 button.MouseButton1Click:Connect(function()
     is3DRenderingEnabled = not is3DRenderingEnabled
-    game:GetService("RunService"):Set3dRenderingEnabled(is3DRenderingEnabled)
-    button.Text = is3DRenderingEnabled and "Turn 3D Rendering Off" or "Turn 3D Rendering On"
+    applyState()
 end)
-
-closeButton.Size = UDim2.new(0, 20, 0, 20)
-closeButton.Position = UDim2.new(1, -25, 0, 5)
-closeButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.Text = "✖"
-closeButton.Parent = frame
 
 closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
-local dragToggle = nil
-local dragSpeed = 0.2
-local dragInput = nil
-local dragStart = nil
-local startPos = nil
-
-local function update(input)
-    local delta = input.Position - dragStart
-    frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
+-- Dragging
+local dragging = false
+local dragStart, startPos
 
 frame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragToggle = true
+        dragging = true
         dragStart = input.Position
         startPos = frame.Position
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
-                dragToggle = false
+                dragging = false
             end
         end)
     end
@@ -69,12 +140,17 @@ end)
 
 frame.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
+        if dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
     end
 end)
 
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if input == dragInput and dragToggle then
-        update(input)
-    end
-end)
+-- Apply initial state
+applyState()
